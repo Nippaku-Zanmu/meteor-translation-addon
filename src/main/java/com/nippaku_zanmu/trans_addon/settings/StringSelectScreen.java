@@ -14,10 +14,8 @@ import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
 import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
 import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WCheckbox;
-import meteordevelopment.meteorclient.settings.EntityTypeListSetting;
 import meteordevelopment.meteorclient.utils.Utils;
-import meteordevelopment.meteorclient.utils.misc.Names;
-import net.minecraft.util.Tuple;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -71,21 +69,6 @@ public class StringSelectScreen extends WindowScreen {
             if (setting.filter == null || setting.filter.test(s)) strsSize++;
         }
 
-//        hasAnimal = hasWaterAnimal = hasMonster = hasAmbient = hasMisc = 0;
-//
-//        for (EntityType<?> entityType : setting.get()) {
-//            if (setting.filter == null || setting.filter.test(entityType)) {
-//                switch (entityType.getSpawnGroup()) {
-//                    case CREATURE -> hasAnimal++;
-//                    case WATER_AMBIENT, WATER_CREATURE, UNDERGROUND_WATER_CREATURE, AXOLOTLS -> hasWaterAnimal++;
-//                    case MONSTER -> hasMonster++;
-//                    case AMBIENT -> hasAmbient++;
-//                    case MISC -> hasMisc++;
-//                }
-//            }
-//        }
-//
-//        boolean first = animals == null;
         List<String> stringE = new ArrayList<>();
         WCheckbox stringC = theme.checkbox(strsSize > 0);
 
@@ -95,15 +78,6 @@ public class StringSelectScreen extends WindowScreen {
         Cell<WSection> stringsCell = add(strings).expandX();
         stringsT = strings.add(theme.table()).expandX().widget();
 
-//        // Animals
-//        List<EntityType<?>> animalsE = new ArrayList<>();
-//        WCheckbox animalsC = theme.checkbox(hasAnimal > 0);
-//
-//        animals = theme.section("Strings", animals != null && animals.isExpanded(), animalsC);
-//        animalsC.action = () -> tableChecked(animalsE, animalsC.checked);
-//
-//        Cell<WSection> animalsCell = add(animals).expandX();
-//        animalsT = animals.add(theme.table()).expandX().widget();
 
         Consumer<String> stringForeach = str -> {
             stringE.add(str);
@@ -112,72 +86,25 @@ public class StringSelectScreen extends WindowScreen {
 
         strings.setExpanded(true);
 
-//        Consumer<EntityType<?>> entityTypeForEach = entityType -> {
-//            if (setting.filter == null || setting.filter.test(entityType)) {
-//                switch (entityType.getSpawnGroup()) {
-//                    case CREATURE -> {
-//                        animalsE.add(entityType);
-//                        addEntityType(animalsT, animalsC, entityType);
-//                    }
-//                    case WATER_AMBIENT, WATER_CREATURE, UNDERGROUND_WATER_CREATURE, AXOLOTLS -> {
-//                        waterAnimalsE.add(entityType);
-//                        addEntityType(waterAnimalsT, waterAnimalsC, entityType);
-//                    }
-//                    case MONSTER -> {
-//                        monstersE.add(entityType);
-//                        addEntityType(monstersT, monstersC, entityType);
-//                    }
-//                    case AMBIENT -> {
-//                        ambientE.add(entityType);
-//                        addEntityType(ambientT, ambientC, entityType);
-//                    }
-//                    case MISC -> {
-//                        miscE.add(entityType);
-//                        addEntityType(miscT, miscC, entityType);
-//                    }
-//                }
-//            }
-//        };
 
         // Sort all entities
         if (filterText.isEmpty()) {
             setting.validValues.forEach(stringForeach);
         } else {
-            List<Tuple<String, Integer>> entities = new ArrayList<>();
+            record DiffByType<S, I extends Number>(String type, int diff) {}
+            List<DiffByType<String, Integer>> strings = new ArrayList<>();
             setting.validValues.forEach(str -> {
                 int words = Utils.searchInWords(str, filterText);
                 int diff = Utils.searchLevenshteinDefault(str, filterText, false);
 
-                if (words > 0 || diff < str.length() / 2) entities.add(new Tuple<>(str, -diff));
+                if (words > 0 || diff < str.length() / 2) strings.add(new DiffByType<>(str, -diff));
             });
-            entities.sort(Comparator.comparingInt(value -> -value.getB()));
-            for (Tuple<String, Integer> pair : entities) stringForeach.accept(pair.getA());
+
+            strings.sort(Comparator.comparingInt(DiffByType::diff));
+            for (var pair : strings) stringForeach.accept(pair.type);
         }
 
         if (stringsT.cells.isEmpty()) list.cells.remove(stringsCell);
-//        if (waterAnimalsT.cells.isEmpty()) list.cells.remove(waterAnimalsCell);
-//        if (monstersT.cells.isEmpty()) list.cells.remove(monstersCell);
-//        if (ambientT.cells.isEmpty()) list.cells.remove(ambientCell);
-//        if (miscT.cells.isEmpty()) list.cells.remove(miscCell);
-
-
-//        if (first) {
-//            int totalCount = (hasWaterAnimal + waterAnimals.cells.size() + monsters.cells.size() + ambient.cells.size() + misc.cells.size()) / 2;
-//
-//            if (totalCount <= 20) {
-//                if (!animalsT.cells.isEmpty()) animals.setExpanded(true);
-//                if (!waterAnimalsT.cells.isEmpty()) waterAnimals.setExpanded(true);
-//                if (!monstersT.cells.isEmpty()) monsters.setExpanded(true);
-//                if (!ambientT.cells.isEmpty()) ambient.setExpanded(true);
-//                if (!miscT.cells.isEmpty()) misc.setExpanded(true);
-//            } else {
-//                if (!animalsT.cells.isEmpty()) animals.setExpanded(false);
-//                if (!waterAnimalsT.cells.isEmpty()) waterAnimals.setExpanded(false);
-//                if (!monstersT.cells.isEmpty()) monsters.setExpanded(false);
-//                if (!ambientT.cells.isEmpty()) ambient.setExpanded(false);
-//                if (!miscT.cells.isEmpty()) misc.setExpanded(false);
-//            }
-//        }
     }
 
     private void tableChecked(List<String> strings, boolean checked) {
@@ -201,26 +128,7 @@ public class StringSelectScreen extends WindowScreen {
         }
     }
 
-    //    private void tableChecked(List<EntityType<?>> entityTypes, boolean checked) {
-//        boolean changed = false;
-//
-//        for (EntityType<?> entityType : entityTypes) {
-//            if (checked) {
-//                setting.get().add(entityType);
-//                changed = true;
-//            } else {
-//                if (setting.get().remove(entityType)) {
-//                    changed = true;
-//                }
-//            }
-//        }
-//
-//        if (changed) {
-//            list.clear();
-//            initWidgets();
-//            setting.onChanged();
-//        }
-//    }
+
     private void addString(WTable table, WCheckbox tableCheckbox, String str) {
         table.add(theme.label(str));
         WCheckbox a = table.add(theme.checkbox(setting.get().contains(str))).expandCellX().right().widget();

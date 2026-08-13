@@ -36,7 +36,7 @@ public class ExtraSettings {
         factories.put(StringSelectSetting.class, (table, setting) -> stringSelectW(table, (StringSelectSetting) setting));    }
 
     private void stringSelectW(WTable table, StringSelectSetting setting) {
-        selectW(table, setting, () -> mc.setScreen(new StringSelectScreen(theme, setting)));
+        selectW(table, setting, () -> mc.gui.setScreen(new StringSelectScreen(theme, setting)));
 
     }private void selectW(WContainer c, Setting<?> setting, Runnable action) {
         boolean addCount = WSelectedCountLabel.getSize(setting) != -1;

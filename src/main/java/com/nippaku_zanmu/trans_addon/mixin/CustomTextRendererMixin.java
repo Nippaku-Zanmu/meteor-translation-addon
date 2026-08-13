@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.renderer.text.FontFace;
 import meteordevelopment.meteorclient.renderer.text.TextRenderer;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -61,40 +62,32 @@ public abstract class CustomTextRendererMixin implements TextRenderer {
      * @author Nippaku_Zanmu
      * @reason  我只能用这种方法修复他 之前尝试过Mixin Font类 但是字体会乱码
      */
-    @Overwrite
-    public void begin(double scale, boolean scaleOnly, boolean big) {
-        if (this.building) {
-            throw new RuntimeException("CustomTextRenderer.begin() called twice");
+    @Override
+    public void begin(GuiGraphicsExtractor graphics, double scale, boolean scaleOnly, boolean big) {
+        if (building) throw new RuntimeException("CustomTextRenderer.begin() called twice");
+
+        if (!scaleOnly) mesh.begin();
+
+        if (big) {
+            this.font_fix = fonts_fix[fonts_fix.length - 1];
         } else {
-            if (!scaleOnly) {
-                this.mesh.begin();
-            }
+            double scaleA = Math.floor(scale * 10) / 10;
 
-            if (big) {
-                this.font_fix = this.fonts_fix[this.fonts_fix.length - 1];
-            } else {
-                double scaleA = Math.floor(scale * 10.0) / 10.0;
-                byte scaleI;
-                if (scaleA >= 3.0) {
-                    scaleI = 5;
-                } else if (scaleA >= 2.5) {
-                    scaleI = 4;
-                } else if (scaleA >= 2.0) {
-                    scaleI = 3;
-                } else if (scaleA >= 1.5) {
-                    scaleI = 2;
-                } else {
-                    scaleI = 1;
-                }
+            int scaleI;
+            if (scaleA >= 3) scaleI = 5;
+            else if (scaleA >= 2.5) scaleI = 4;
+            else if (scaleA >= 2) scaleI = 3;
+            else if (scaleA >= 1.5) scaleI = 2;
+            else scaleI = 1;
 
-                this.font_fix = this.fonts_fix[scaleI - 1];
-            }
-
-            this.building = true;
-            this.scaleOnly = scaleOnly;
-            this.fontScale = (double)this.font_fix.getHeight() / 27.0;
-            this.scale = 1.0 + (scale - this.fontScale) / this.fontScale;
+            font_fix = fonts_fix[scaleI - 1];
         }
+
+        this.building = true;
+        this.scaleOnly = scaleOnly;
+
+        this.fontScale = font_fix.getHeight() / 27.0;
+        this.scale = 1 + (scale - fontScale) / fontScale;
     }
     /**
      * @author Nippaku_Zanmu
@@ -121,26 +114,21 @@ public abstract class CustomTextRendererMixin implements TextRenderer {
      * @author Nippaku_Zanmu
      * @reason  我只能用这种方法修复他 之前尝试过Mixin Font类 但是字体会乱码
      */
-    @Overwrite
+    @Override
     public double render(String text, double x, double y, Color color, boolean shadow) {
-        boolean wasBuilding = this.building;
-        if (!wasBuilding) {
-            this.begin();
-        }
+        if (!building) throw new RuntimeException("VanillaTextRenderer.render() called without calling begin()");
 
         double width;
         if (shadow) {
             int preShadowA = SHADOW_COLOR.a;
-            SHADOW_COLOR.a = (int)((double)color.a / 255.0 * (double)preShadowA);
-            width = this.font_fix.render(this.mesh, text, x + this.fontScale * this.scale / 1.5, y + this.fontScale * this.scale / 1.5, SHADOW_COLOR, this.scale / 1.5);
-            this.font_fix.render(this.mesh, text, x, y, color, this.scale / 1.5);
+            SHADOW_COLOR.a = (int) (color.a / 255.0 * preShadowA);
+
+            width = font_fix.render(mesh, text, x + fontScale * scale / 1.5, y + fontScale * scale / 1.5, SHADOW_COLOR, scale / 1.5);
+            font_fix.render(mesh, text, x, y, color, scale / 1.5);
+
             SHADOW_COLOR.a = preShadowA;
         } else {
-            width = this.font_fix.render(this.mesh, text, x, y, color, this.scale / 1.5);
-        }
-
-        if (!wasBuilding) {
-            this.end();
+            width = font_fix.render(mesh, text, x, y, color, scale / 1.5);
         }
 
         return width;
@@ -151,18 +139,23 @@ public abstract class CustomTextRendererMixin implements TextRenderer {
      * @reason  我只能用这种方法修复他 之前尝试过Mixin Font类 但是字体会乱码
      */
     @Overwrite
+    @Override
     public void end() {
-        if (!this.building) {
-            throw new RuntimeException("CustomTextRenderer.end() called without calling begin()");
-        } else {
-            if (!this.scaleOnly) {
-                this.mesh.end();
-                MeshRenderer.begin().attachments(Minecraft.getInstance().getMainRenderTarget()).pipeline(MeteorRenderPipelines.UI_TEXT).mesh(this.mesh).sampler("u_Texture", this.font_fix.texture.getTextureView(), this.font_fix.texture.getSampler()).end();
-            }
+        if (!building) throw new RuntimeException("CustomTextRenderer.end() called without calling begin()");
 
-            this.building = false;
-            this.scale = 1.0;
+        if (!scaleOnly) {
+            mesh.end();
+
+            MeshRenderer.begin()
+                .attachments(Minecraft.getInstance().gameRenderer.mainRenderTarget())
+                .pipeline(MeteorRenderPipelines.UI_TEXT)
+                .mesh(mesh)
+                .sampler("u_Texture", font_fix.texture.getTextureView(), font_fix.texture.getSampler())
+                .end();
         }
+
+        building = false;
+        scale = 1;
     }
 
     public void destroy() {}

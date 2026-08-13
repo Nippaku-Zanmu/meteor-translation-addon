@@ -1,7 +1,5 @@
 package com.nippaku_zanmu.trans_addon.util;
 
-import com.nippaku_zanmu.trans_addon.mixin.ModuleAccessor;
-import com.nippaku_zanmu.trans_addon.mixin.SettingAccessor;
 import com.nippaku_zanmu.trans_addon.mixin.SettingGroupAccessor;
 import com.nippaku_zanmu.trans_addon.modules.Translation;
 import com.nippaku_zanmu.trans_addon.util.trans_engine.AbstractTransEngine;
@@ -9,12 +7,10 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 
 public class JsonDump {

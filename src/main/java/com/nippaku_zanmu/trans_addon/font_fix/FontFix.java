@@ -4,8 +4,8 @@
  */
 package com.nippaku_zanmu.trans_addon.font_fix;
 
+import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.TextureFormat;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import meteordevelopment.meteorclient.renderer.MeshBuilder;
 import meteordevelopment.meteorclient.renderer.Texture;
@@ -57,7 +57,7 @@ public class FontFix {
         STBTruetype.stbtt_PackBegin(packContext, bitmap, size, size, 0, 1);
 
         // Create texture object and get font scale
-        texture = new Texture(size, size, TextureFormat.RED8, FilterMode.LINEAR, FilterMode.LINEAR);
+        texture = new Texture(size, size, GpuFormat.R8_UNORM, FilterMode.LINEAR, FilterMode.LINEAR);
         texture.upload(bitmap);
         scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, height);
 
@@ -143,7 +143,7 @@ public class FontFix {
     }
 
     private void createTexture() {
-        texture = new Texture(size, size, TextureFormat.RED8, FilterMode.LINEAR, FilterMode.LINEAR);
+        texture = new Texture(size, size, GpuFormat.R8_UNORM, FilterMode.LINEAR, FilterMode.LINEAR);
         texture.upload(bitmap);
         //((ByteTextureAccessor)texture).upload(size, size, bitmap, ByteTexture.Format.A, ByteTexture.Filter.Linear, ByteTexture.Filter.Linear);
     }
