@@ -4,8 +4,8 @@
  */
 package com.nippaku_zanmu.trans_addon.font_fix;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import meteordevelopment.meteorclient.renderer.MeshBuilder;
 import meteordevelopment.meteorclient.renderer.Texture;
